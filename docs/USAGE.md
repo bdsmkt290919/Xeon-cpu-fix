@@ -29,6 +29,7 @@ Behavior:
 - Reassigns process affinity with `taskset`
 - Optionally updates IRQ affinity when `linux_irq_balance: true`
 - Optionally logs NUMA recommendations when `linux_numactl: true`
+- Reuses `monitor_interval_seconds` as the balancing loop interval
 
 Use `linux_candidate_processes` as a comma-separated allow-list if you only want to rebalance specific processes.
 
@@ -58,6 +59,7 @@ Behavior:
 - Detects overloaded logical processors
 - Selects high-CPU processes, or the configured process allow-list
 - Updates process affinity masks to move load toward cooler cores
+- Reuses `monitor_interval_seconds` as the balancing loop interval
 
 ## Logging
 

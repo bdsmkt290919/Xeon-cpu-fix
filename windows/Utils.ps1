@@ -22,10 +22,16 @@ function Get-ConfigCache {
             $parts = $line -split ':', 2
             $key = $parts[0].Trim()
             $value = $parts[1].Trim()
-            if ($value -notmatch "^['\"]") {
+            if ($value.StartsWith('"') -and $value -match '^"(.*)"(?:\s+#.*)?$') {
+                $value = $Matches[1]
+            }
+            elseif ($value.StartsWith("'") -and $value -match "^'(.*)'(?:\s+#.*)?$") {
+                $value = $Matches[1]
+            }
+            else {
                 $value = ($value -replace '\s+#.*$', '').Trim()
             }
-            if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+            if ($value.Length -ge 2 -and (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'")))) {
                 $value = $value.Substring(1, $value.Length - 2)
             }
             $cache[$key] = $value

@@ -31,6 +31,7 @@ capture_snapshot() {
 }
 
 collect_usage() {
+    local collected=0
     sleep "${SAMPLE_DELAY}"
     while read -r cpu_id total idle; do
         local previous_total previous_idle usage
@@ -40,7 +41,12 @@ collect_usage() {
         USAGE_BY_CPU["${cpu_id}"]="${usage}"
         PREV_TOTALS["${cpu_id}"]="${total}"
         PREV_IDLES["${cpu_id}"]="${idle}"
+        collected=1
     done < <(read_cpu_totals)
+    if (( collected == 0 )); then
+        log_message "WARN" "Unable to collect Linux CPU usage data from /proc/stat"
+        return 1
+    fi
 }
 
 is_candidate_process() {
@@ -187,7 +193,13 @@ rebalance_processes() {
 capture_snapshot
 
 while true; do
-    collect_usage
+    if ! collect_usage; then
+        if [[ "${RUN_ONCE}" == true ]]; then
+            break
+        fi
+        SAMPLE_DELAY="${INTERVAL}"
+        continue
+    fi
     read -r hottest_cpu hottest_load coolest_cpu coolest_load < <(find_hot_and_cool_cpus)
 
     if (( hottest_load < THRESHOLD )); then

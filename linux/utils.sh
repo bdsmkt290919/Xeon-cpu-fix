@@ -53,10 +53,8 @@ config_list() {
     local key="$1"
     local raw
     raw="$(config_value "${key}" "")"
-    raw="${raw//\"/}"
-    raw="${raw// /}"
     if [[ -n "${raw}" ]]; then
-        tr ',' '\n' <<< "${raw}" | sed '/^$/d'
+        tr ',' '\n' <<< "${raw}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d'
     fi
 }
 

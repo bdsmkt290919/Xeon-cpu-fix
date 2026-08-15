@@ -1,3 +1,4 @@
+# Shared interval for both monitor and auto-balance loops.
 monitor_interval_seconds: 5
 load_threshold_percent: 30
 log_level: INFO
