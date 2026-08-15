@@ -12,9 +12,11 @@ require_command top
 INTERVAL="$(linux_interval)"
 TOP_LINES="$(config_value "linux_top_snapshot_lines" "15")"
 RUN_ONCE=false
+SAMPLE_DELAY="${INTERVAL}"
 
 if [[ "${1:-}" == "--once" ]]; then
     RUN_ONCE=true
+    SAMPLE_DELAY=1
 fi
 
 declare -A PREV_TOTALS
@@ -47,7 +49,7 @@ print_cycle() {
 capture_snapshot
 
 while true; do
-    sleep "${INTERVAL}"
+    sleep "${SAMPLE_DELAY}"
     print_cycle
     if [[ "${RUN_ONCE}" == true ]]; then
         break

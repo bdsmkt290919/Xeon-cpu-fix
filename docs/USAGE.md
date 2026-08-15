@@ -5,13 +5,13 @@
 Run continuously:
 
 ```bash
-/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/monitor.sh
+./linux/monitor.sh
 ```
 
 Run a single sample:
 
 ```bash
-/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/monitor.sh --once
+./linux/monitor.sh --once
 ```
 
 The monitor reads `/proc/stat`, calculates per-core load between samples, and appends log entries to `logs/xeon-cpu-fix.log`. Each cycle also prints a `top` snapshot.
@@ -19,7 +19,7 @@ The monitor reads `/proc/stat`, calculates per-core load between samples, and ap
 ## Linux auto-balance
 
 ```bash
-/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/auto-balance.sh --once
+./linux/auto-balance.sh --once
 ```
 
 Behavior:

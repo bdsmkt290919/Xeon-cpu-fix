@@ -12,9 +12,11 @@ require_command taskset
 INTERVAL="$(linux_interval)"
 THRESHOLD="$(linux_threshold)"
 RUN_ONCE=false
+SAMPLE_DELAY="${INTERVAL}"
 
 if [[ "${1:-}" == "--once" ]]; then
     RUN_ONCE=true
+    SAMPLE_DELAY=1
 fi
 
 declare -A PREV_TOTALS
@@ -29,7 +31,7 @@ capture_snapshot() {
 }
 
 collect_usage() {
-    sleep "${INTERVAL}"
+    sleep "${SAMPLE_DELAY}"
     while read -r cpu_id total idle; do
         local previous_total previous_idle usage
         previous_total="${PREV_TOTALS[${cpu_id}]:-0}"
@@ -174,4 +176,5 @@ while true; do
     if [[ "${RUN_ONCE}" == true ]]; then
         break
     fi
+    SAMPLE_DELAY="${INTERVAL}"
 done

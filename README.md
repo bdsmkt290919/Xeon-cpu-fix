@@ -32,9 +32,9 @@ xeon-cpu-fix/
 ### Linux
 
 ```bash
-chmod +x /home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/*.sh
-/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/monitor.sh --once
-/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/auto-balance.sh --once
+chmod +x linux/*.sh
+./linux/monitor.sh --once
+./linux/auto-balance.sh --once
 ```
 
 ### Windows
@@ -63,5 +63,5 @@ Additional Linux and Windows options are included for process targeting and bala
 
 ## Documentation
 
-- Installation: `/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/docs/INSTALL.md`
-- Usage: `/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/docs/USAGE.md`
+- Installation: `docs/INSTALL.md`
+- Usage: `docs/USAGE.md`

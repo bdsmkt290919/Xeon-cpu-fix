@@ -10,10 +10,10 @@
 3. Clone the repository and make the scripts executable:
 
    ```bash
-   chmod +x /home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/linux/*.sh
+   chmod +x linux/*.sh
    ```
 
-4. Review `/home/runner/work/Xeon-cpu-fix/Xeon-cpu-fix/config/config.yaml`.
+4. Review `config/config.yaml`.
 5. Run the monitor or auto-balancer.
 
 ### Optional privileges

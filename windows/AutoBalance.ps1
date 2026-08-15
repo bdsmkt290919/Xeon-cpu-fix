@@ -47,6 +47,10 @@ do {
     $perCore = Get-PerCoreCpuLoad
     if (-not $perCore) {
         Write-Log -Level "WARN" -Message "No per-core performance counter data was returned"
+        if (-not $Once) {
+            Start-Sleep -Seconds $IntervalSeconds
+            continue
+        }
         break
     }
 
