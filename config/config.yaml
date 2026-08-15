@@ -1,0 +1,20 @@
+# Shared interval for both monitor and auto-balance loops.
+monitor_interval_seconds: 5
+load_threshold_percent: 30
+log_level: INFO
+
+# Linux-specific options
+linux_irq_balance: false
+linux_numactl: false
+linux_candidate_processes: ""
+
+# Windows-specific options
+windows_process_whitelist: ""
+
+# Logging
+log_file: logs/xeon-cpu-fix.log
+max_log_size_mb: 10
+retention_days: 7
+
+# Alerts
+enable_alerts: true
