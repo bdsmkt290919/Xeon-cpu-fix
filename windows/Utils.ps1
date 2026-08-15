@@ -4,6 +4,29 @@ $ErrorActionPreference = "Stop"
 $script:UtilsDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $script:RepositoryRoot = Split-Path -Parent $script:UtilsDirectory
 $script:ConfigFile = Join-Path $script:RepositoryRoot "config/config.yaml"
+$script:ConfigCache = $null
+$script:ResolvedLogFilePath = $null
+
+function Get-ConfigCache {
+    if ($null -ne $script:ConfigCache) {
+        return $script:ConfigCache
+    }
+
+    $cache = @{}
+    if (Test-Path -LiteralPath $script:ConfigFile) {
+        foreach ($line in Get-Content -LiteralPath $script:ConfigFile) {
+            if ($line -match '^\s*#' -or $line -notmatch ':') {
+                continue
+            }
+
+            $parts = $line -split ':', 2
+            $cache[$parts[0].Trim()] = $parts[1].Trim().Trim('"')
+        }
+    }
+
+    $script:ConfigCache = $cache
+    return $script:ConfigCache
+}
 
 function Get-ConfigValue {
     param(
@@ -13,45 +36,27 @@ function Get-ConfigValue {
         [string]$DefaultValue = ""
     )
 
-    if (-not (Test-Path -LiteralPath $script:ConfigFile)) {
-        return $DefaultValue
-    }
-
-    foreach ($line in Get-Content -LiteralPath $script:ConfigFile) {
-        if ($line -match '^\s*#' -or $line -notmatch ':') {
-            continue
-        }
-
-        $parts = $line -split ':', 2
-        if ($parts[0].Trim() -eq $Key) {
-            return $parts[1].Trim().Trim('"')
-        }
+    $cache = Get-ConfigCache
+    if ($cache.ContainsKey($Key)) {
+        return $cache[$Key]
     }
 
     return $DefaultValue
 }
 
-function Get-ConfigList {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Key
-    )
-
-    $raw = Get-ConfigValue -Key $Key -DefaultValue ""
-    if ([string]::IsNullOrWhiteSpace($raw)) {
-        return @()
+function Get-LogFilePath {
+    if ($null -ne $script:ResolvedLogFilePath) {
+        return $script:ResolvedLogFilePath
     }
 
-    return $raw.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }
-}
-
-function Get-LogFilePath {
     $configured = Get-ConfigValue -Key "log_file" -DefaultValue "logs/xeon-cpu-fix.log"
     if ([System.IO.Path]::IsPathRooted($configured)) {
-        return $configured
+        $script:ResolvedLogFilePath = $configured
+        return $script:ResolvedLogFilePath
     }
 
-    return Join-Path $script:RepositoryRoot $configured
+    $script:ResolvedLogFilePath = Join-Path $script:RepositoryRoot $configured
+    return $script:ResolvedLogFilePath
 }
 
 function Get-LogLevelRank {
@@ -91,6 +96,20 @@ function Write-Log {
     $line = "{0} [{1}] {2}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Level.ToUpperInvariant(), $Message
     Write-Host $line
     Add-Content -LiteralPath $logFile -Value $line
+}
+
+function Get-ConfigList {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Key
+    )
+
+    $raw = Get-ConfigValue -Key $Key -DefaultValue ""
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        return @()
+    }
+
+    return $raw.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 }
 
 function Get-PerCoreCpuLoad {

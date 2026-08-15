@@ -22,12 +22,19 @@ config_value() {
     local key="$1"
     local default_value="${2:-}"
     local value
-    value="$(awk -F': ' -v wanted="${key}" '
-        $1 ~ /^[[:space:]]*#/ { next }
-        $1 == wanted {
-            sub(/\r$/, "", $2)
-            gsub(/^"|"$/, "", $2)
-            print $2
+    value="$(awk -F':' -v wanted="${key}" '
+        $0 ~ /^[[:space:]]*#/ { next }
+        {
+            current_key = $1
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", current_key)
+        }
+        current_key == wanted {
+            value = $0
+            sub(/^[^:]+:[[:space:]]*/, "", value)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+            sub(/\r$/, "", value)
+            gsub(/^"|"$/, "", value)
+            print value
             exit
         }
     ' "${CONFIG_FILE}" 2>/dev/null || true)"

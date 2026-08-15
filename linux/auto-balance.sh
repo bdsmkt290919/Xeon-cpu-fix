@@ -138,9 +138,33 @@ rebalance_processes() {
     local cool_cpu="$2"
     local moved_any=false
 
+    affinity_contains_cpu() {
+        local affinity="$1"
+        local cpu="$2"
+        local segment start end
+        IFS=',' read -ra segments <<< "${affinity}"
+        for segment in "${segments[@]}"; do
+            if [[ "${segment}" == *-* ]]; then
+                start="${segment%-*}"
+                end="${segment#*-}"
+                if (( cpu >= start && cpu <= end )); then
+                    return 0
+                fi
+            elif [[ "${segment}" == "${cpu}" ]]; then
+                return 0
+            fi
+        done
+        return 1
+    }
+
     while read -r pid cpu_usage process_name; do
         [[ -n "${pid}" ]] || continue
         if ! is_candidate_process "${process_name}"; then
+            continue
+        fi
+        local current_affinity
+        current_affinity="$(taskset -pc "${pid}" 2>/dev/null | awk -F': ' 'NR == 1 { print $2 }')"
+        if [[ -z "${current_affinity}" ]] || ! affinity_contains_cpu "${current_affinity}" "${hot_cpu}"; then
             continue
         fi
         if taskset -pc "${cool_cpu}" "${pid}" >/dev/null 2>&1; then
@@ -149,7 +173,7 @@ rebalance_processes() {
         else
             log_message "WARN" "Unable to move PID ${pid} (${process_name}); higher privileges may be required"
         fi
-    done < <(ps -eLo pid,psr,pcpu,comm --no-headers | awk -v hot="${hot_cpu}" '$2 == hot && $3 > 0.5 { print $1, $3, $4 }')
+    done < <(ps -eo pid,pcpu,comm --no-headers | awk '$2 > 0.5 { print $1, $2, $3 }')
 
     if [[ "${moved_any}" == false ]]; then
         log_message "INFO" "No eligible Linux processes found on CPU ${hot_cpu} for rebalancing"

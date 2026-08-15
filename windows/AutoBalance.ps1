@@ -55,10 +55,19 @@ do {
     }
 
     $hotCore = $perCore | Sort-Object Load -Descending | Select-Object -First 1
-    $coolCores = $perCore | Sort-Object Load, Core
+    $coolCores = $perCore |
+        Where-Object { $_.Core -ne $hotCore.Core -and $_.Load -lt $hotCore.Load } |
+        Sort-Object Load, Core
+
+    if (-not $coolCores) {
+        $coolCores = $perCore | Where-Object { $_.Core -ne $hotCore.Core } | Sort-Object Load, Core
+    }
 
     if ($hotCore.Load -lt $threshold) {
         Write-Log -Level "INFO" -Message ("No Windows rebalance required; hottest core {0} at {1}%%" -f $hotCore.Core, $hotCore.Load)
+    }
+    elseif (-not $coolCores) {
+        Write-Log -Level "INFO" -Message "No Windows rebalance required; only one logical core is available"
     }
     else {
         $targets = Get-TargetProcesses
