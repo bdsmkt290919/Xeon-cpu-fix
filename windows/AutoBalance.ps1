@@ -56,11 +56,13 @@ do {
 
     $hotCore = $perCore | Sort-Object Load -Descending | Select-Object -First 1
     $coolCores = $perCore |
-        Where-Object { $_.Core -ne $hotCore.Core -and $_.Load -lt $hotCore.Load } |
+        Where-Object { $_.Core -ne $hotCore.Core -and $_.Load -lt $threshold } |
         Sort-Object Load, Core
 
     if (-not $coolCores) {
-        $coolCores = $perCore | Where-Object { $_.Core -ne $hotCore.Core } | Sort-Object Load, Core
+        $coolCores = $perCore |
+            Where-Object { $_.Core -ne $hotCore.Core -and $_.Load -lt $hotCore.Load } |
+            Sort-Object Load, Core
     }
 
     if ($hotCore.Load -lt $threshold) {

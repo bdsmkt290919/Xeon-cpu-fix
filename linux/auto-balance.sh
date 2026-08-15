@@ -133,32 +133,36 @@ log_numa_hint() {
     log_message "INFO" "NUMA hint: consider launching hot workloads with numactl --cpunodebind=${cool_node:-0} --membind=${cool_node:-0} to move pressure from node ${hot_node:-0}"
 }
 
+affinity_contains_cpu() {
+    local affinity="$1"
+    local cpu="$2"
+    local segment start end
+    local -a segments
+    IFS=',' read -ra segments <<< "${affinity}"
+    for segment in "${segments[@]}"; do
+        if [[ "${segment}" == *-* ]]; then
+            start="${segment%-*}"
+            end="${segment#*-}"
+            if (( cpu >= start && cpu <= end )); then
+                return 0
+            fi
+        elif [[ "${segment}" == "${cpu}" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 rebalance_processes() {
     local hot_cpu="$1"
     local cool_cpu="$2"
     local moved_any=false
 
-    affinity_contains_cpu() {
-        local affinity="$1"
-        local cpu="$2"
-        local segment start end
-        IFS=',' read -ra segments <<< "${affinity}"
-        for segment in "${segments[@]}"; do
-            if [[ "${segment}" == *-* ]]; then
-                start="${segment%-*}"
-                end="${segment#*-}"
-                if (( cpu >= start && cpu <= end )); then
-                    return 0
-                fi
-            elif [[ "${segment}" == "${cpu}" ]]; then
-                return 0
-            fi
-        done
-        return 1
-    }
-
-    while read -r pid cpu_usage process_name; do
+    while read -r pid cpu_usage process_args; do
         [[ -n "${pid}" ]] || continue
+        local process_name
+        process_name="${process_args%% *}"
+        process_name="${process_name##*/}"
         if ! is_candidate_process "${process_name}"; then
             continue
         fi
@@ -173,7 +177,7 @@ rebalance_processes() {
         else
             log_message "WARN" "Unable to move PID ${pid} (${process_name}); higher privileges may be required"
         fi
-    done < <(ps -eo pid,pcpu,comm --no-headers | awk '$2 > 0.5 { print $1, $2, $3 }')
+    done < <(ps -eo pid=,pcpu=,args= | awk '$2 > 0.5 { $1=$1; print }')
 
     if [[ "${moved_any}" == false ]]; then
         log_message "INFO" "No eligible Linux processes found on CPU ${hot_cpu} for rebalancing"

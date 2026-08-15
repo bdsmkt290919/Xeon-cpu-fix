@@ -20,7 +20,15 @@ function Get-ConfigCache {
             }
 
             $parts = $line -split ':', 2
-            $cache[$parts[0].Trim()] = $parts[1].Trim().Trim('"')
+            $key = $parts[0].Trim()
+            $value = $parts[1].Trim()
+            if ($value -notmatch "^['\"]") {
+                $value = ($value -replace '\s+#.*$', '').Trim()
+            }
+            if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+                $value = $value.Substring(1, $value.Length - 2)
+            }
+            $cache[$key] = $value
         }
     }
 

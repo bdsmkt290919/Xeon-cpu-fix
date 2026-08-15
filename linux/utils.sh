@@ -31,9 +31,12 @@ config_value() {
         current_key == wanted {
             value = $0
             sub(/^[^:]+:[[:space:]]*/, "", value)
+            if (value !~ /^["\047]/) {
+                sub(/[[:space:]]+#.*$/, "", value)
+            }
             gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
             sub(/\r$/, "", value)
-            gsub(/^"|"$/, "", value)
+            gsub(/^["\047]|["\047]$/, "", value)
             print value
             exit
         }
